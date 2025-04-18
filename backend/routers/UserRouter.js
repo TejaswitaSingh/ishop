@@ -49,6 +49,7 @@ userRouter.post("/move-to-db/:userId",(req,res)=>{
 
 // add to cart
 userRouter.post("/add-to-cart",(req,res)=>{
+    console.log(req.body);
     const result=new userController().addToCart(req.body);
     result.then(
         (success)=>{
@@ -61,5 +62,18 @@ userRouter.post("/add-to-cart",(req,res)=>{
     )
 })
 // add to cart
+
+// get cart from DB
+userRouter.get("/get-cart/:userId", (req, res) => {
+    const result = new userController().getCart(req.params.userId);
+    result
+        .then((success) => {
+            res.send(success);
+        })
+        .catch((error) => {
+            res.status(500).send(error);
+        });
+});
+// get cart from DB
 
 module.exports =userRouter;

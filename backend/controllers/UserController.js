@@ -240,7 +240,7 @@ class userController{
     }
     //dbtocart
 
-//removeFromCart
+    //removeFromCart
     removeFromCart(userId, productId) {
         return new Promise(async (resolve, reject) => {
           try {
@@ -265,8 +265,41 @@ class userController{
             });
           }
         });
-      }
-      
+    }
+    //removeFromCart
+
+    // get cart from DB
+    getCart(userId) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                // Fetch the cart data from the database
+                const cartItems = await cartModel.find({ userId }).populate("product_id", "_id originalPrice finalPrice");
+    
+                if (!cartItems || cartItems.length === 0) {
+                    resolve({
+                        msg: "Cart is empty",
+                        status: 1,
+                        dbCartData: [] // Return empty array if no cart items exist
+                    });
+                } else {
+                    resolve({
+                        msg: "Fetched cart successfully",
+                        status: 1,
+                        dbCartData: cartItems // Return the populated cart data
+                    });
+                }
+            } catch (error) {
+                console.log(error);
+                reject({
+                    msg: "Internal server error",
+                    status: 0
+                });
+            }
+        });
+    }
+    
+// get cart from DB
+
 }
 
 module.exports = userController

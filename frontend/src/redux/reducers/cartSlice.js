@@ -9,6 +9,7 @@ export const cartSlice = createSlice({
   },
   reducers: {
     addToCart(state, { payload }) {
+      console.log("Adding to cart:", payload); // Debugging line
       const productData = state.data.find((prod) => prod.productId === payload.productId);
       if (productData) {
         productData.qty++;

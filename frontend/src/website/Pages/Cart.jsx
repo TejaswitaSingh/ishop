@@ -79,9 +79,7 @@ export default function Cart() {
               </div>
 
               <div className="flex justify-between items-center w-[750px] px-11">
-                <span>
-                  {formatPriceINR(ProductCart.originalPrice)}
-                </span>
+                <span>{formatPriceINR(ProductCart.originalPrice)}</span>
                 <div className="flex items-center border border-gray-300 px-3 py-1 rounded-md">
                   <button
                     onClick={() =>
@@ -135,14 +133,12 @@ export default function Cart() {
         <div className="w-[300px] text-right">
           <div className="flex justify-between py-1">
             <span>Original Price</span>
-            <span>
-              {formatPriceINR(cart.original_total)}
-            </span>
+            <span>{formatPriceINR(cart.original_total)}</span>
           </div>
           <div className="flex justify-between py-1">
             <span>Savings</span>
-            <span className="text-green-600">-
-              {formatPriceINR(cart.original_total - cart.total)}
+            <span className="text-green-600">
+              -{formatPriceINR(cart.original_total - cart.total)}
             </span>
           </div>
           <div className="flex justify-between py-1">
@@ -151,9 +147,7 @@ export default function Cart() {
           </div>
           <div className="flex justify-between text-xl font-bold py-2">
             <span>TOTAL</span>
-            <span>
-              {formatPriceINR(cart.total)}
-            </span>
+            <span>{formatPriceINR(cart.total)}</span>
           </div>
           <button onClick={isLogin} className="bg-blue-500 text-white w-full py-3 mt-3">
             Check out

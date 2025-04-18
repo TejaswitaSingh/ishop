@@ -3,11 +3,11 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { MainContext } from '../../Context';
 import { login } from '../../redux/reducers/userSlice';
-import axios from 'axios';
 import { dbToCart } from '../../redux/reducers/cartSlice';
+import ApiService from '../../services/apiService';
 
 function LoginUser() {
-  const { USER_URL, API_BASE_URL, notify } = useContext(MainContext);
+  const { notify } = useContext(MainContext);
   const [searchParams] = useSearchParams();
   const navigator = useNavigate();
   const dispatcher = useDispatch();
@@ -40,60 +40,67 @@ function LoginUser() {
     setErrors({ ...errors, [e.target.name]: '' });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (validate()) {
-      axios.post(API_BASE_URL + USER_URL + "/login", formData)
-        .then((response) => {
-          if (response.data.status === 1) {
-            e.target.reset();
-            setFormData({
-              password: '',
-              email: '',
-            });
-            setErrors({});
+      try {
+        const response = await ApiService.loginUser(formData);
+        
+        if (response.data.status === 1) {
+          e.target.reset();
+          setFormData({
+            password: '',
+            email: '',
+          });
+          setErrors({});
 
-            dispatcher(login({
-              data: response.data.user,
-              token: response.data.token
+          dispatcher(login({
+            data: response.data.user,
+            token: response.data.token
+          }));
+
+          // ✅ Send local cart to DB and fetch updated DB cart
+          const localCart = JSON.parse(localStorage.getItem("cart-data")) || [];
+
+          await ApiService.moveCartToDB(response.data.user._id, localCart);
+          
+          // Now fetch merged cart from DB
+          const resp = await ApiService.getCartFromDB(response.data.user._id);
+          const latestCart = resp.data.dbCartData;
+
+          if (Array.isArray(latestCart)) {
+            let original_total = 0;
+            let final_total = 0;
+
+            const data = latestCart.map((lc) => {
+              original_total += lc.product_id.originalPrice * lc.qty;
+              final_total += lc.product_id.finalPrice * lc.qty;
+              return {
+                productId: lc.product_id._id,
+                qty: lc.qty
+              };
+            });
+
+            dispatcher(dbToCart({
+              data,
+              total: final_total,
+              original_total: original_total
             }));
 
-            // ✅ Fetch cart from DB, do not send local cart (avoids duplication)
-            axios.get(API_BASE_URL + USER_URL+"/move-to-db/"+response?.data?.user._id)
-              .then((resp) => {
-                const latestCart = resp.data.dbCartData;
-                let original_total = 0;
-                let final_total = 0;
-
-                const data = latestCart.map((lc) => {
-                  original_total += lc.product_id.originalPrice * lc.qty;
-                  final_total += lc.product_id.finalPrice * lc.qty;
-                  return {
-                    productId: lc.product_id._id,
-                    qty: lc.qty
-                  };
-                });
-
-                dispatcher(dbToCart({
-                  data,
-                  total: final_total,
-                  original_total: original_total
-                }));
-
-                localStorage.setItem("cart-data", JSON.stringify(data));
-                localStorage.setItem("cart-total", JSON.stringify(final_total));
-                localStorage.setItem("original-total", JSON.stringify(original_total));
-              })
-              .catch((error) => {
-                console.log("Error fetching DB cart:", error);
-              });
+            localStorage.setItem("cart-data", JSON.stringify(data));
+            localStorage.setItem("cart-total", JSON.stringify(final_total));
+            localStorage.setItem("original-total", JSON.stringify(original_total));
+          } else {
+            console.log("❌ Invalid cart data received from DB:", latestCart);
+            notify("Failed to fetch merged cart. Please try again.", 0);
           }
+        }
 
-          notify(response.data.msg, response.data.status);
-        })
-        .catch((error) => {
-          console.log(error);
-        });
+        notify(response.data.msg, response.data.status);
+      } catch (error) {
+        console.log(error);
+        notify("An error occurred during login. Please try again.", 0);
+      }
     }
   };
 

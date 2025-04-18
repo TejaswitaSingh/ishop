@@ -7,7 +7,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/reducers/userSlice";
 import { emptyCart } from "../../redux/reducers/cartSlice";
-import axios from "axios";
+import ApiService from "../../services/apiService";
 
 const Header = () => {
   const cart = useSelector((state) => state.cart.data);
@@ -15,21 +15,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const logoutHandler = async () => {
-    const localCart = localStorage.getItem("cart-data");
-  
-    if (user?._id && localCart && JSON.parse(localCart).length > 0) {
-      try {
-        await axios.post(
-          `http://localhost:5000/user/move-to-db/${user._id}`,
-          { cartData: localCart }
-        );
-        console.log("✅ Cart moved to DB successfully.");
-      } catch (err) {
-        console.error("❌ Error moving cart to DB:", err);
-      }
-    }
-  
+  const logoutHandler = async () => {; 
     dispatch(logout());
     dispatch(emptyCart());
   

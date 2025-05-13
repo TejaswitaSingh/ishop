@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { IoMdArrowDropdown } from "react-icons/io";
 import { CgProfile } from "react-icons/cg";
 import { FaCartShopping } from "react-icons/fa6";
@@ -8,25 +8,49 @@ import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../redux/reducers/userSlice";
 import { emptyCart } from "../../redux/reducers/cartSlice";
 import ApiService from "../../services/apiService";
+import { MainContext } from "../../Context";
+import SearchBar from "./SearchBar";
+import { debounce } from "lodash"; // Import lodash debounce function
 
 const Header = () => {
   const cart = useSelector((state) => state.cart.data);
   const user = useSelector((state) => state.user.data);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const { product } = useContext(MainContext);
 
-  const logoutHandler = async () => {; 
+  const logoutHandler = async () => {
     dispatch(logout());
     dispatch(emptyCart());
-  
+
     localStorage.removeItem("user-data");
     localStorage.removeItem("cart-data");
     localStorage.removeItem("cart-total");
     localStorage.removeItem("original-total");
-  
+
     navigate("/");
   };
-  
+
+  const [query, setQuery] = useState("");
+  const [results, setResults] = useState([]);
+
+  // Debounced search effect
+  useEffect(() => {
+    if (query.trim() === "") {
+      setResults([]);
+      return;
+    }
+
+    const filtered = product.filter((p) =>
+      p.title.toLowerCase().includes(query.toLowerCase())
+    );
+
+    setResults(filtered);
+  }, [query, product]);
+
+  const handleSearchChange = debounce((e) => {
+    setQuery(e.target.value);
+  }, 500); // Debounce time of 500ms
 
   return (
     <header className="w-full">
@@ -40,6 +64,15 @@ const Header = () => {
               $ <IoMdArrowDropdown />
             </div>
           </div>
+        </div>
+
+        <div className="flex items-center border border-slate-300 rounded-lg w-64 h-10 px-2 m-2">
+          <input
+            className="w-full h-full outline-none bg-transparent"
+            type="text"
+            placeholder="Search..."
+          />
+          <FaSearch className="text-slate-500" />
         </div>
 
         <div className="h-10 m-auto">
@@ -77,14 +110,12 @@ const Header = () => {
             <Link to="/cart" className="mt-2.5">
               <div className="flex items-center gap-2 text-black text-sm">
                 <FaCartShopping className="text-lg" />
-                <span className="text-[red] font-bold">{cart.length}</span> Items
+                <span className="text-[red] font-bold">{cart.length}</span>{" "}
+                Items
               </div>
             </Link>
             <div className="flex items-center gap-2 text-gray-500 text-sm">
               ₹20000
-            </div>
-            <div className="flex items-center gap-2 text-black text-sm">
-              <FaSearch className="text-md" />
             </div>
           </div>
         </div>
@@ -99,22 +130,37 @@ const Header = () => {
         <nav>
           <ul className="text-sm font-medium flex justify-center gap-8 pt-3 text-[#22262A]">
             <li className="hover:text-sky-500">
-              <Link className="hover:underline hover:decoration-sky-500" to="/">HOME</Link>
+              <Link className="hover:underline hover:decoration-sky-500" to="/">
+                HOME
+              </Link>
             </li>
             <li className="hover:text-sky-500">
-              <Link className="hover:underline hover:decoration-sky-500" to="/store">STORE</Link>
+              <Link
+                className="hover:underline hover:decoration-sky-500"
+                to="/store"
+              >
+                STORE
+              </Link>
             </li>
             <li className="hover:text-sky-500">
-              <Link className="hover:underline hover:decoration-sky-500" to="#">IPHONE</Link>
+              <Link className="hover:underline hover:decoration-sky-500" to="#">
+                IPHONE
+              </Link>
             </li>
             <li className="hover:text-sky-500">
-              <Link className="hover:underline hover:decoration-sky-500" to="#">IPAD</Link>
+              <Link className="hover:underline hover:decoration-sky-500" to="#">
+                IPAD
+              </Link>
             </li>
             <li className="hover:text-sky-500">
-              <Link className="hover:underline hover:decoration-sky-500" to="#">MACBOOK</Link>
+              <Link className="hover:underline hover:decoration-sky-500" to="#">
+                MACBOOK
+              </Link>
             </li>
             <li className="hover:text-sky-500">
-              <Link className="hover:underline hover:decoration-sky-500" to="#">ACCESSORIES</Link>
+              <Link className="hover:underline hover:decoration-sky-500" to="#">
+                ACCESSORIES
+              </Link>
             </li>
           </ul>
         </nav>

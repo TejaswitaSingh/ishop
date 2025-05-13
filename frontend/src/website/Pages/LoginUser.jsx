@@ -59,16 +59,28 @@ function LoginUser() {
             token: response.data.token
           }));
 
-          // ✅ Send local cart to DB and fetch updated DB cart
+          // Get local cart data
           const localCart = JSON.parse(localStorage.getItem("cart-data")) || [];
-
-          await ApiService.moveCartToDB(response.data.user._id, localCart);
           
-          // Now fetch merged cart from DB
+          // If there are items in local cart, merge them with DB cart
+          if (localCart.length > 0) {
+            // First, send local cart to DB
+            const moveToDbResponse = await ApiService.moveCartToDB(response?.data?.user._id,localCart); 
+            
+
+            if (moveToDbResponse.data.status === 1) {
+              console.log("✅ Local cart merged with DB cart");
+            } else {
+              console.error("❌ Failed to merge local cart with DB cart");
+            }
+          }
+          
+          // Then fetch the merged cart from DB
           const resp = await ApiService.getCartFromDB(response.data.user._id);
           const latestCart = resp.data.dbCartData;
 
           if (Array.isArray(latestCart)) {
+            
             let original_total = 0;
             let final_total = 0;
 
@@ -77,7 +89,9 @@ function LoginUser() {
               final_total += lc.product_id.finalPrice * lc.qty;
               return {
                 productId: lc.product_id._id,
-                qty: lc.qty
+                qty: lc.qty,
+                finalPrice: lc.product_id.finalPrice,
+                originalPrice: lc.product_id.originalPrice
               };
             });
 
@@ -87,11 +101,13 @@ function LoginUser() {
               original_total: original_total
             }));
 
+            // Update localStorage with merged cart
             localStorage.setItem("cart-data", JSON.stringify(data));
             localStorage.setItem("cart-total", JSON.stringify(final_total));
             localStorage.setItem("original-total", JSON.stringify(original_total));
+            
           } else {
-            console.log("❌ Invalid cart data received from DB:", latestCart);
+            console.error("❌ Invalid cart data received from DB:", latestCart);
             notify("Failed to fetch merged cart. Please try again.", 0);
           }
         }

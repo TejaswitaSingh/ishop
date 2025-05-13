@@ -137,17 +137,30 @@ class userController{
     //login user
 
     //movetodb
-    moveToDb(userId,data){
+    moveCartToDB(userId,data){
+        console.log(userId,data)
         return new Promise(
             async (resolve,reject)=>{
                 try{
-                    const cartData = data?JSON.parse(data.cartData) :null
+                    const cartData = Array.isArray(data.cartData)
+                    ? data.cartData
+                    : (typeof data.cartData === "string"
+                    ? JSON.parse(data.cartData)
+                    : null);
+                    console.log(cartData)
                     if(cartData!=null){
+                        console.log("📦 Processing local cart items:", cartData);
                         const allPromise = cartData.map(
                             async (cd)=>{
-                                const d=await cartModel.findOne({userId:userId,product_id:cd.productId})
+                                // Find existing cart item
+                                const d=await cartModel.findOne({
+                                    userId: userId,
+                                    product_id: cd.productId
+                                });
+                                
                                 if(d){
-                                    //qty increase
+                                    // If item exists, update quantity
+                                    console.log(`🔄 Updating quantity for product ${cd.productId} from ${d.qty} to ${d.qty + Number(cd.qty)}`);
                                     await cartModel.updateOne(
                                         {_id:d._id},
                                         {
@@ -157,17 +170,26 @@ class userController{
                                         }
                                     )
                                 }else{
-                                    //new insert
+                                    // If item doesn't exist, create new entry
+                                    console.log(`➕ Adding new product ${cd.productId} with quantity ${cd.qty}`);
                                     await new cartModel({
                                         userId:userId,
                                         product_id:cd.productId,
-                                        qty:cd.qty
+                                        qty:cd.qty,
+                                        originalPrice: cd.originalPrice,
+                                        finalPrice: cd.finalPrice
                                     }).save()
                                 }
                             }
                         )
                         await Promise.all(allPromise)
-                        const dbCartData=await cartModel.find({userId:userId}).populate("product_id","_id originalPrice finalPrice")
+                        
+                        // Fetch updated cart
+                        const dbCartData=await cartModel.find({userId:userId})
+                            .populate("product_id","_id originalPrice finalPrice")
+                        
+                        console.log("✅ Cart merge completed. Final cart:", dbCartData);
+                        
                         resolve(
                             {
                                 msg:"Cart moved to db",
@@ -176,7 +198,8 @@ class userController{
                             }
                         )
                     }else{
-                        const dbCartData=await cartModel.find({userId:userId}).populate("product_id","_id originalPrice finalPrice")
+                        const dbCartData=await cartModel.find({userId:userId})
+                            .populate("product_id","_id originalPrice finalPrice")
                         resolve(
                             {
                                 status:1,
@@ -185,7 +208,7 @@ class userController{
                         )
                     }
                 }catch(error){
-                    console.log(error)
+                    console.error("❌ Error in moveToDb:", error)
                     reject(
                         {
                             msg:"Internal server error",
@@ -297,8 +320,54 @@ class userController{
             }
         });
     }
-    
-// get cart from DB
+    // get cart from DB
+
+    // updateCartQty
+    updateCartQty(userId, productId, qty) {
+    return new Promise(async (resolve, reject) => {
+        try {
+            if (qty <= 0) {
+                // Delete item if quantity is zero or less
+                const deleted = await cartModel.deleteOne({ userId: userId, product_id: productId });
+                if (deleted.deletedCount > 0) {
+                    resolve({
+                        msg: "Item removed from cart due to zero quantity",
+                        status: 1,
+                    });
+                } else {
+                    reject({
+                        msg: "Item not found in cart",
+                        status: 0,
+                    });
+                }
+            } else {
+                const updated = await cartModel.updateOne(
+                    { userId: userId, product_id: productId },
+                    { $set: { qty: qty } }
+                );
+
+                if (updated.modifiedCount > 0) {
+                    resolve({
+                        msg: "Quantity updated successfully",
+                        status: 1,
+                    });
+                } else {
+                    reject({
+                        msg: "Item not found or quantity unchanged",
+                        status: 0,
+                    });
+                }
+            }
+        } catch (error) {
+            console.log(error);
+            reject({
+                msg: "Internal Server Error",
+                status: 0,
+            });
+        }
+    });
+    }
+    // updateCartQty
 
 }
 

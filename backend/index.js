@@ -8,6 +8,7 @@ const colorRouter = require("./routers/ColorRouter");
 const productRouter = require("./routers/ProductRouter");
 const adminRouter = require("./routers/AdminRouter");
 const userRouter = require('./routers/UserRouter');
+const orderRouter = require('./routers/OrderRouter');
 
 server.use(cors(
     {
@@ -22,6 +23,7 @@ server.use("/color",colorRouter);
 server.use("/product",productRouter);
 server.use("/admin",adminRouter);
 server.use("/user",userRouter);
+server.use("/order",orderRouter);
 
 mongoose.connect(process.env.MONGODB_URL,{
     dbName:"Ishop"

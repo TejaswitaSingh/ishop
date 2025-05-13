@@ -34,7 +34,7 @@ userRouter.post("/login",(req,res)=>{
 
 // move to db
 userRouter.post("/move-to-db/:userId",(req,res)=>{
-    const result=new userController().moveToDb(req.params.userId,req.body)
+    const result=new userController().moveCartToDB(req.params.userId,req.body)
     result.then(
         (success)=>{
                 res.send(success)
@@ -75,5 +75,26 @@ userRouter.get("/get-cart/:userId", (req, res) => {
         });
 });
 // get cart from DB
+
+// remove cart item
+userRouter.delete("/remove-from-cart/:userId/:productId", (req, res) => {
+    const { userId, productId } = req.params;
+    const result = new userController().removeFromCart(userId, productId);
+    result
+        .then((success) => res.send(success))
+        .catch((error) => res.status(500).send(error));
+});
+// remove cart item
+
+// update cart quantity
+userRouter.patch("/update-cart-qty", (req, res) => {
+    const { userId, productId, qty } = req.body;
+    const result = new userController().updateCartQty(userId, productId, qty);
+    result
+        .then((success) => res.send(success))
+        .catch((error) => res.status(500).send(error));
+});
+// update cart quantity
+
 
 module.exports =userRouter;

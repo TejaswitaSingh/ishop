@@ -10,6 +10,16 @@ class productController{
             async(resolve,reject)=>{
                 try{
                     const filterQuery={};
+                    
+                    // Handle search query
+                    if(query.search){
+                        filterQuery["$or"] = [
+                            { name: { $regex: query.search, $options: 'i' } },
+                            { shortDescription: { $regex: query.search, $options: 'i' } },
+                            { longDescription: { $regex: query.search, $options: 'i' } }
+                        ];
+                    }
+
                     if(query.categorySlug!="null"){
                         const category=await categoryModel.findOne({slug:query.categorySlug});
                         if(category){

@@ -21,16 +21,25 @@ export default function ProductCard({ product }) {
           userId: user.data._id,
           productId: productData.productId,
         });
-        console.log("✅ Cart saved to DB:", res.data);
         
         // After successful API call, update Redux state
-        dispatcher(addToCart(productData));
+        dispatcher(addToCart({
+          productId: product._id,
+          finalPrice: product.finalPrice,
+          originalPrice: product.originalPrice,
+          qty: 1
+        }));
       } catch (err) {
         console.log("❌ Failed to save cart:", err);
       }
     } else {
-      // If user is not logged in, only update Redux state
-      dispatcher(addToCart(productData));
+      // If user is not logged in, update Redux state with complete product data
+      dispatcher(addToCart({
+        productId: product._id,
+        finalPrice: product.finalPrice,
+        originalPrice: product.originalPrice,
+        qty: 1
+      }));
     }
   }
 

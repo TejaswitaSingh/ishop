@@ -9,7 +9,7 @@ export const cartSlice = createSlice({
   },
   reducers: {
     addToCart(state, { payload }) {
-      console.log("Adding to cart:", payload); // Debugging line
+      console.log("Adding to cart:", payload);
       const productData = state.data.find((prod) => prod.productId === payload.productId);
       if (productData) {
         productData.qty++;
@@ -26,8 +26,8 @@ export const cartSlice = createSlice({
       state.original_total += Number(payload.originalPrice);
 
       localStorage.setItem("cart-data", JSON.stringify(state.data));
-      localStorage.setItem("cart-total", state.total);
-      localStorage.setItem("original-total", state.original_total);
+      localStorage.setItem("cart-total", JSON.stringify(state.total));
+      localStorage.setItem("original-total", JSON.stringify(state.original_total));
     },
 
     removeFromCart(state, { payload }) {
@@ -41,8 +41,8 @@ export const cartSlice = createSlice({
         state.data.splice(index, 1);
 
         localStorage.setItem("cart-data", JSON.stringify(state.data));
-        localStorage.setItem("cart-total", state.total);
-        localStorage.setItem("original-total", state.original_total);
+        localStorage.setItem("cart-total", JSON.stringify(state.total));
+        localStorage.setItem("original-total", JSON.stringify(state.original_total));
       }
     },
 
@@ -57,8 +57,8 @@ export const cartSlice = createSlice({
         item.qty = payload.qty;
 
         localStorage.setItem("cart-data", JSON.stringify(state.data));
-        localStorage.setItem("cart-total", state.total);
-        localStorage.setItem("original-total", state.original_total);
+        localStorage.setItem("cart-total", JSON.stringify(state.total));
+        localStorage.setItem("original-total", JSON.stringify(state.original_total));
       }
     },
 
@@ -68,9 +68,13 @@ export const cartSlice = createSlice({
       const OriginalTotal = localStorage.getItem("original-total");
 
       if (cartData) {
-        state.data = JSON.parse(cartData);
-        state.total = Number(cartTotal);
-        state.original_total = Number(OriginalTotal);
+        try {
+          state.data = JSON.parse(cartData);
+          state.total = Number(JSON.parse(cartTotal));
+          state.original_total = Number(JSON.parse(OriginalTotal));
+        } catch (error) {
+          console.error("Error loading cart from localStorage:", error);
+        }
       }
     },
 
@@ -88,8 +92,8 @@ export const cartSlice = createSlice({
       state.total = payload.total;
       state.original_total = payload.original_total;
       localStorage.setItem("cart-data", JSON.stringify(state.data));
-      localStorage.setItem("cart-total", state.total);
-      localStorage.setItem("original-total", state.original_total);
+      localStorage.setItem("cart-total", JSON.stringify(state.total));
+      localStorage.setItem("original-total", JSON.stringify(state.original_total));
     }
   },
 });

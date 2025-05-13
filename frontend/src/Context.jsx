@@ -12,6 +12,7 @@ export default function Context(props) {
     const PRODUCT_URL = "/product";
     const ADMIN_URL = "/admin";
     const USER_URL = "/user";
+    const ORDER_URL = "/order";
     // urls
 
     // states
@@ -82,7 +83,7 @@ export default function Context(props) {
     // functions//
     return (
     <MainContext.Provider
-        value={{ notify,USER_URL,ADMIN_URL,PRODUCT_URL,productHandler,product, category,categoryHandler,colorHandler,COLOR_URL,color,  API_BASE_URL, CATEGORY_URL }}
+        value={{ notify,USER_URL,ADMIN_URL,PRODUCT_URL,ORDER_URL,productHandler,product, category,categoryHandler,colorHandler,COLOR_URL,color,  API_BASE_URL, CATEGORY_URL }}
     >
         {props.children}
         <ToastContainer />

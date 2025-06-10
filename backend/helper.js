@@ -23,3 +23,4 @@ const Verifytoken =(user)=> {
 // verify token
 
 module.exports ={generateUniqueImageName,encryptedPassword,decryptedPassword,Generatetoken,Verifytoken}
+
